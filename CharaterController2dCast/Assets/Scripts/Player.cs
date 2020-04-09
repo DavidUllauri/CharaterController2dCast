@@ -28,9 +28,9 @@ public class Player : MonoBehaviour
 				float targetVelocityX;
 				Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 
-				velocity.y += gravity * Time.deltaTime;
 				targetVelocityX = input.x * moveSpeed;
 				velocity.x = targetVelocityX;
+				velocity.y += gravity * Time.deltaTime;
 				controller.Move (velocity * Time.deltaTime);
-    }
+	}
 }
