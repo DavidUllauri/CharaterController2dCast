@@ -14,23 +14,28 @@ public class Player : MonoBehaviour
 
 		Controller2D controller;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        controller = GetComponent<Controller2D> ();
+		// Start is called before the first frame update
+		void Start()
+		{
+				controller = GetComponent<Controller2D>();
 
-				gravity = -(2 * jumpHeight) / Mathf.Pow (timeToJumpApex, 2);
-    }
+				gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
+		}
 
-    // Update is called once per frame
-    void Update()
-    {
+		// Update is called once per frame
+		void Update()
+		{
 				float targetVelocityX;
-				Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+				Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+				Debug.Log(controller.collisions.ToString ());
+				if (controller.collisions.above || controller.collisions.below) {
+						velocity.y = 0;
+				}
 
 				targetVelocityX = input.x * moveSpeed;
 				velocity.x = targetVelocityX;
 				velocity.y += gravity * Time.deltaTime;
 				controller.Move (velocity * Time.deltaTime);
-	}
+		}
 }
