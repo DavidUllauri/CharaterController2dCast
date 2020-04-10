@@ -32,10 +32,13 @@ public class Player : MonoBehaviour
 				if (controller.collisions.above || controller.collisions.below) {
 						velocity.y = 0;
 				}
+				else {
+						velocity.y += gravity * Time.deltaTime;
+				}
 
 				targetVelocityX = input.x * moveSpeed;
 				velocity.x = targetVelocityX;
-				velocity.y += gravity * Time.deltaTime;
+				
 				controller.Move (velocity * Time.deltaTime);
 		}
 }

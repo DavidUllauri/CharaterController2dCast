@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider2D))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class Controller2D : MonoBehaviour
 {
 		ContactFilter2D contactFilter;
@@ -26,8 +27,12 @@ public class Controller2D : MonoBehaviour
 		public void Move (Vector2 velocity) {
 				collisions.Reset ();
 
+				if (velocity.x != 0)
+				{
+						HorizontalCollisions (ref velocity);
+				}
 				if (velocity.y != 0) {
-					VerticalCollisions (ref velocity);
+						VerticalCollisions (ref velocity);
 				}
 
 				transform.Translate (velocity);
@@ -57,19 +62,46 @@ public class Controller2D : MonoBehaviour
 				}
 		}
 
+		void HorizontalCollisions (ref Vector2 velocity) {
+				float directionX;
+				float castLength;
+				int hitCount;
+
+				directionX = Mathf.Sign (velocity.x);
+				castLength = Mathf.Abs (velocity.x) + _skinWidth;
+				hitCount = _collider.Cast (directionX * Vector2.right, contactFilter, hitBuffer, castLength);
+
+				hitBufferList.Clear ();
+
+				for (int i=0; i < hitCount; i++) {
+						hitBufferList.Add (hitBuffer[i]);
+				}
+
+				foreach (RaycastHit2D hit in hitBufferList) { 
+						velocity.x = (hit.distance - _skinWidth) * directionX;
+						castLength = hit.distance;
+
+						collisions.left = (directionX == -1);
+						collisions.right = (directionX == 1);
+				}
+		}
+
 		public struct CollisionInfo {
 				public bool above, below;
+				public bool left, right;
 
 				public void Reset() {
-						above = false;
-						below = false;
+						above = below = false;
+						left = right = false;
 				}
 
 				public override string ToString () {
 						return string.Format (
-								"(controller: a:{0} b:{1})",
+								"(controller: a:{0} b:{1} l:{2} r{3})",
 								above,
-								below);
+								below,
+								left,
+								right);
 				}
 		}
 }
