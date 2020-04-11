@@ -10,6 +10,7 @@ public class Player : MonoBehaviour
 		float moveSpeed = 6;
 
 		float gravity;
+		float jumpVelocity;
 		Vector2 velocity;
 
 		Controller2D controller;
@@ -20,6 +21,7 @@ public class Player : MonoBehaviour
 				controller = GetComponent<Controller2D>();
 
 				gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
+				jumpVelocity = Mathf.Abs (gravity) * timeToJumpApex;
 		}
 
 		// Update is called once per frame
@@ -28,17 +30,18 @@ public class Player : MonoBehaviour
 				float targetVelocityX;
 				Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
-				Debug.Log(controller.collisions.ToString ());
 				if (controller.collisions.above || controller.collisions.below) {
 						velocity.y = 0;
 				}
-				else {
-						velocity.y += gravity * Time.deltaTime;
+
+				Debug.Log(controller.collisions.ToString ());
+				if (Input.GetButtonDown ("Jump") && controller.collisions.below) {
+						velocity.y = jumpVelocity;
 				}
 
 				targetVelocityX = input.x * moveSpeed;
 				velocity.x = targetVelocityX;
-				
+				velocity.y += gravity * Time.deltaTime;
 				controller.Move (velocity * Time.deltaTime);
 		}
 }

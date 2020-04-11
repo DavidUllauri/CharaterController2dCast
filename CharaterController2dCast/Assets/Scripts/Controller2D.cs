@@ -9,8 +9,13 @@ public class Controller2D : MonoBehaviour
 		ContactFilter2D contactFilter;
 
 		const float _skinWidth = 0.015f;
+		int rayCount = 3;
+
+		float horizontalRaySpacing;
+		float verticalRaySpacing;
 
 		Collider2D _collider;
+		RaycastOrigins raycastOrigins;
 		public CollisionInfo collisions;
 		RaycastHit2D [] hitBuffer = new RaycastHit2D [16];
 		List<RaycastHit2D> hitBufferList = new List<RaycastHit2D> (16);
@@ -22,13 +27,14 @@ public class Controller2D : MonoBehaviour
 
 				contactFilter.SetLayerMask (Physics2D.GetLayerCollisionMask (gameObject.layer));
 				contactFilter.useLayerMask = true;
+				CalculateRaySpacing ();
     }
 
 		public void Move (Vector2 velocity) {
+				UpdateColliderBounds ();
 				collisions.Reset ();
 
-				if (velocity.x != 0)
-				{
+				if (velocity.x != 0) {
 						HorizontalCollisions (ref velocity);
 				}
 				if (velocity.y != 0) {
@@ -39,13 +45,21 @@ public class Controller2D : MonoBehaviour
 		}
 
 		void VerticalCollisions (ref Vector2 velocity) {
-				float directionY;
+				int directionY;
 				float castLength;
 				int hitCount;
 
-				directionY = Mathf.Sign (velocity.y);
+				directionY = (int)Mathf.Sign (velocity.y);
 				castLength = Mathf.Abs (velocity.y) + _skinWidth;
 				hitCount = _collider.Cast (directionY * Vector2.up, contactFilter, hitBuffer, castLength);
+
+				for (int i=0; i < rayCount; i++) {
+						Vector2 rayOrigin;
+
+						rayOrigin = (directionY == -1) ?raycastOrigins.bottomLeft : raycastOrigins.topLeft;
+						rayOrigin += Vector2.right * (verticalRaySpacing * i + velocity.x);
+						Debug.DrawRay (rayOrigin, Vector2.up * directionY * castLength * 2, Color.red);
+				}
 
 				hitBufferList.Clear ();
 
@@ -71,6 +85,14 @@ public class Controller2D : MonoBehaviour
 				castLength = Mathf.Abs (velocity.x) + _skinWidth;
 				hitCount = _collider.Cast (directionX * Vector2.right, contactFilter, hitBuffer, castLength);
 
+				for (int i=0; i < rayCount; i++) {
+						Vector2 rayOrigin;
+
+						rayOrigin = (directionX == -1) ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
+						rayOrigin += Vector2.up * (horizontalRaySpacing * i);
+						Debug.DrawRay (rayOrigin, Vector2.right * directionX * castLength * 3, Color.red);
+				}
+
 				hitBufferList.Clear ();
 
 				for (int i=0; i < hitCount; i++) {
@@ -84,6 +106,32 @@ public class Controller2D : MonoBehaviour
 						collisions.left = (directionX == -1);
 						collisions.right = (directionX == 1);
 				}
+		}
+
+		void UpdateColliderBounds () {
+				Bounds bounds = _collider.bounds;
+				bounds.Expand (_skinWidth * -2);
+
+				raycastOrigins.bottomLeft = new Vector2 (bounds.min.x, bounds.min.y);
+				raycastOrigins.bottomRight = new Vector2 (bounds.max.x, bounds.min.y);
+				raycastOrigins.topLeft = new Vector2 (bounds.min.x, bounds.max.y);
+				raycastOrigins.topRight = new Vector2 (bounds.max.x, bounds.max.y);
+		}
+
+		void CalculateRaySpacing () {
+				Bounds bounds = _collider.bounds;
+				bounds.Expand (_skinWidth * -2);
+				rayCount = 3;
+
+				rayCount = Mathf.Clamp (rayCount, 2, int.MaxValue);
+
+				horizontalRaySpacing = bounds.size.y / (rayCount - 1);
+				verticalRaySpacing = bounds.size.x / (rayCount - 1);
+		}
+
+		struct RaycastOrigins {
+				public Vector2 topLeft, topRight;
+				public Vector2 bottomLeft, bottomRight;
 		}
 
 		public struct CollisionInfo {
